@@ -10,7 +10,7 @@ from playhouse.shortcuts import model_to_dict
 from Util import getCurrentTimeMillis
 
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True
+#app.config["DEBUG"] = True
 db = peewee.SqliteDatabase('elastic-archiver.db')
 
 
@@ -53,8 +53,11 @@ def getServerById():
 # save an es server
 @app.route('/api/v1/elastic-server', methods=['POST'])
 def createESServer():
-    server = ElasticServer.create(host=request.json['host'], created_at=getCurrentTimeMillis())
-    server.save()
+    try:
+        server = ElasticServer.create(host=request.json['host'], created_at=getCurrentTimeMillis())
+        server.save()
+    except peewee.IntegrityError:
+        return "Elastic server is already added."
     return json.dumps(model_to_dict(server))
 
 
