@@ -3,6 +3,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# pyenv
+.python-version
+
+# dotenv
+.env
+
+# virtualenv
+venv/
+ENV/
+
 *.db
 .DS_Store
 *.iml
