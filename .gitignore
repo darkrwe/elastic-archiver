@@ -2,17 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
 # pyenv
 .python-version
-
 # dotenv
-.env
-
-# virtualenv
-venv/
-ENV/
-
+.en
 *.db
 .DS_Store
 *.iml
