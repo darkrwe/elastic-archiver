@@ -23,6 +23,7 @@ class BaseModel(Model):
 class ElasticServer(BaseModel):
     id = BigIntegerField(primary_key=True, unique=True)
     host = CharField(unique=True)
+    region = CharField(unique=True, default="us-east-1")
     created_at = BigIntegerField()
     is_registered = peewee.BooleanField(default=False)
 
@@ -55,7 +56,7 @@ def getServerById():
 @app.route('/api/v1/elastic-server', methods=['POST'])
 def createESServer():
     try:
-        server = ElasticServer.create(host=request.json['host'], created_at=getCurrentTimeMillis())
+        server = ElasticServer.create(host=request.json['host'], created_at=getCurrentTimeMillis(), region=request.json['region'])
         server.save()
     except peewee.IntegrityError:
         return "Elastic server is already added."
