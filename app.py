@@ -3,6 +3,7 @@ import json
 
 import flask
 import peewee
+from flask import Response
 from flask import request
 from peewee import Model, BigIntegerField, CharField
 from playhouse.shortcuts import model_to_dict
@@ -10,7 +11,7 @@ from playhouse.shortcuts import model_to_dict
 from Util import getCurrentTimeMillis
 
 app = flask.Flask(__name__)
-#app.config["DEBUG"] = True
+app.config["DEBUG"] = True
 db = peewee.SqliteDatabase('elastic-archiver.db')
 
 
@@ -33,7 +34,7 @@ def getAllServers():
     for server in ElasticServer.select():
         print(server)
         servers.append(model_to_dict(server))
-    return json.dumps(servers)
+    return response(json.dumps(servers))
 
 
 # get an es server by id
@@ -47,7 +48,7 @@ def getServerById():
         server = ElasticServer.get(ElasticServer.id == id)
     except:
         return "No elastic server found"
-    return json.dumps(model_to_dict(server))
+    return response(json.dumps(model_to_dict(server)))
 
 
 # save an es server
@@ -58,7 +59,11 @@ def createESServer():
         server.save()
     except peewee.IntegrityError:
         return "Elastic server is already added."
-    return json.dumps(model_to_dict(server))
+    return response(json.dumps(model_to_dict(server)))
+
+
+def response(response):
+    return Response(response, status=200, mimetype='application/json')
 
 
 if __name__ == '__main__':
