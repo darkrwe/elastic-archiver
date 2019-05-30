@@ -26,6 +26,15 @@ class ElasticServer(BaseModel):
     is_registered = peewee.BooleanField(default=False)
 
 
+resp = {
+    'data': {},
+    'path': '',
+    'message': '',
+    'errors': [],
+    'timestamp': ''
+}
+
+
 # get all es servers
 @app.route('/api/v1/elastic-server/all', methods=['GET'])
 def getAllServers():
@@ -33,7 +42,7 @@ def getAllServers():
     for server in ElasticServer.select():
         print(server)
         servers.append(model_to_dict(server))
-    return response(json.dumps(servers))
+    return generateSuccessResponse(servers)
 
 
 # get an es server by id
@@ -42,12 +51,12 @@ def getServerById():
     if 'id' in request.args:
         id = int(request.args['id'])
     else:
-        return "Error: No server id field provided. Please specify an id."
+        return generateErrorResponse(None, "No server id field provided. Please specify an id.", [], 400)
     try:
         server = ElasticServer.get(ElasticServer.id == id)
     except:
-        return "No elastic server found"
-    return response(json.dumps(model_to_dict(server)))
+        return generateErrorResponse(None, "No server id field provided. Please specify an id.", [], 400)
+    return generateSuccessResponse(model_to_dict(server))
 
 
 # save an es server
@@ -58,8 +67,8 @@ def createESServer():
                                       region=request.json['region'])
         server.save()
     except peewee.IntegrityError:
-        return "Elastic server is already added."
-    return response(json.dumps(model_to_dict(server)))
+        return generateErrorResponse(None, "Elastic server is already added", [], 400)
+    return generateSuccessResponse(model_to_dict(server))
 
 
 # register an es server to repo
@@ -67,13 +76,34 @@ def createESServer():
 def registerESServer(server_id):
     try:
         server = ElasticServer.get(ElasticServer.id == server_id)
-    except:
-        return "No elastic server found"
-    return json.dumps(model_to_dict(server))
+
+        if server.is_registered is True:
+            return generateErrorResponse(None, "Server is already registered", [], 400)
+        else:
+            return generateSuccessResponse(True)
+
+    except Exception:
+        return generateErrorResponse(None, "Something went wrong while registering server", [], 500)
+
+    return generateSuccessResponse(True)
 
 
-def response(response):
-    return Response(response, status=200, mimetype='application/json')
+def generateSuccessResponse(data):
+    resp['data'] = data
+    resp['timestamp'] = getCurrentTimeMillis()
+    resp['path'] = request.path
+    resp['errors'] = []
+    resp['message'] = ""
+    return Response(json.dumps(resp), status=200, mimetype='application/json')
+
+
+def generateErrorResponse(data, message, errors, statusCode):
+    resp['data'] = data
+    resp['timestamp'] = getCurrentTimeMillis()
+    resp['path'] = request.path
+    resp['errors'] = errors
+    resp['message'] = message
+    return Response(json.dumps(resp), status=statusCode, mimetype='application/json')
 
 
 if __name__ == '__main__':
