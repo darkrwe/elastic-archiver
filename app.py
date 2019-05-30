@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import json
-
 import flask
 import peewee
-from flask import request
+from flask import request, Response
 from peewee import Model, BigIntegerField, CharField
 from playhouse.shortcuts import model_to_dict
 
@@ -12,7 +11,6 @@ from util import getCurrentTimeMillis
 app = flask.Flask(__name__)
 # app.config["DEBUG"] = True
 db = peewee.SqliteDatabase('elastic-archiver.db')
-
 
 class BaseModel(Model):
     class Meta:
@@ -69,6 +67,9 @@ def registerESServer(server_id):
     except:
         return "No elastic server found"
     return json.dumps(model_to_dict(server))
+
+def response(response):
+    return Response(response, status=200, mimetype='application/json')
 
 
 if __name__ == '__main__':
