@@ -1,4 +1,4 @@
-#!/Users/emininal/githubProjects/elastic-archiver/venv/bin/python
+#!/Users/emininal/githubProjects/test/venv/bin/python
 
 import datetime
 import sys
