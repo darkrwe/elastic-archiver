@@ -12,6 +12,7 @@ app = flask.Flask(__name__)
 # app.config["DEBUG"] = True
 db = peewee.SqliteDatabase('elastic-archiver.db')
 
+
 class BaseModel(Model):
     class Meta:
         database = db
@@ -20,6 +21,7 @@ class BaseModel(Model):
 class ElasticServer(BaseModel):
     id = BigIntegerField(primary_key=True, unique=True)
     host = CharField(unique=True)
+    region = CharField(unique=True, default="us-east-1")
     created_at = BigIntegerField()
     is_registered = peewee.BooleanField(default=False)
 
@@ -31,7 +33,7 @@ def getAllServers():
     for server in ElasticServer.select():
         print(server)
         servers.append(model_to_dict(server))
-    return json.dumps(servers)
+    return response(json.dumps(servers))
 
 
 # get an es server by id
@@ -45,18 +47,19 @@ def getServerById():
         server = ElasticServer.get(ElasticServer.id == id)
     except:
         return "No elastic server found"
-    return json.dumps(model_to_dict(server))
+    return response(json.dumps(model_to_dict(server)))
 
 
 # save an es server
 @app.route('/api/v1/elastic-server', methods=['POST'])
 def createESServer():
     try:
-        server = ElasticServer.create(host=request.json['host'], created_at=getCurrentTimeMillis())
+        server = ElasticServer.create(host=request.json['host'], created_at=getCurrentTimeMillis(),
+                                      region=request.json['region'])
         server.save()
     except peewee.IntegrityError:
         return "Elastic server is already added."
-    return json.dumps(model_to_dict(server))
+    return response(json.dumps(model_to_dict(server)))
 
 
 # register an es server to repo
@@ -67,6 +70,7 @@ def registerESServer(server_id):
     except:
         return "No elastic server found"
     return json.dumps(model_to_dict(server))
+
 
 def response(response):
     return Response(response, status=200, mimetype='application/json')
