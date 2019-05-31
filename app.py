@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-import json
 import flask
 import peewee
-from flask import request, Response
+from flask import request
 from peewee import Model, BigIntegerField, CharField
 from playhouse.shortcuts import model_to_dict
-
+from response_generator import generateSuccessResponse, generateErrorResponse, HttpStatusCodes
 from util import getCurrentTimeMillis
 
 app = flask.Flask(__name__)
@@ -26,15 +25,6 @@ class ElasticServer(BaseModel):
     is_registered = peewee.BooleanField(default=False)
 
 
-resp = {
-    'data': {},
-    'path': '',
-    'message': '',
-    'errors': [],
-    'timestamp': ''
-}
-
-
 # get all es servers
 @app.route('/api/v1/elastic-server/all', methods=['GET'])
 def getAllServers():
@@ -51,11 +41,13 @@ def getServerById():
     if 'id' in request.args:
         id = int(request.args['id'])
     else:
-        return generateErrorResponse(None, "No server id field provided. Please specify an id.", [], 400)
+        return generateErrorResponse(None, "No server id field provided. Please specify an id.", [],
+                                     HttpStatusCodes['BAD_REQUEST'])
     try:
         server = ElasticServer.get(ElasticServer.id == id)
     except:
-        return generateErrorResponse(None, "No server id field provided. Please specify an id.", [], 400)
+        return generateErrorResponse(None, "No server id field provided. Please specify an id.", [],
+                                     HttpStatusCodes['BAD_REQUEST'])
     return generateSuccessResponse(model_to_dict(server))
 
 
@@ -63,11 +55,15 @@ def getServerById():
 @app.route('/api/v1/elastic-server', methods=['POST'])
 def createESServer():
     try:
-        server = ElasticServer.create(host=request.json['host'], created_at=getCurrentTimeMillis(),
-                                      region=request.json['region'])
-        server.save()
-    except peewee.IntegrityError:
-        return generateErrorResponse(None, "Elastic server is already added", [], 400)
+        try:
+            server = ElasticServer.create(host=request.json['host'], created_at=getCurrentTimeMillis(),
+                                          region=request.json['region'])
+            server.save()
+        except peewee.IntegrityError:
+            return generateErrorResponse(None, "Elastic server is already added", [], HttpStatusCodes['BAD_REQUEST'])
+    except Exception:
+        return generateErrorResponse(None, "Something went wrong while saving server", [],
+                                HttpStatusCodes['INTERNAL_SERVER_ERROR'])
     return generateSuccessResponse(model_to_dict(server))
 
 
@@ -78,32 +74,15 @@ def registerESServer(server_id):
         server = ElasticServer.get(ElasticServer.id == server_id)
 
         if server.is_registered is True:
-            return generateErrorResponse(None, "Server is already registered", [], 400)
+            return generateErrorResponse(None, "Server is already registered", [], HttpStatusCodes['BAD_REQUEST'])
         else:
             return generateSuccessResponse(True)
 
     except Exception:
-        return generateErrorResponse(None, "Something went wrong while registering server", [], 500)
+        return generateErrorResponse(None, "Something went wrong while registering server", [],
+                                     HttpStatusCodes['INTERNAL_SERVER_ERROR'])
 
     return generateSuccessResponse(True)
-
-
-def generateSuccessResponse(data):
-    resp['data'] = data
-    resp['timestamp'] = getCurrentTimeMillis()
-    resp['path'] = request.path
-    resp['errors'] = []
-    resp['message'] = ""
-    return Response(json.dumps(resp), status=200, mimetype='application/json')
-
-
-def generateErrorResponse(data, message, errors, statusCode):
-    resp['data'] = data
-    resp['timestamp'] = getCurrentTimeMillis()
-    resp['path'] = request.path
-    resp['errors'] = errors
-    resp['message'] = message
-    return Response(json.dumps(resp), status=statusCode, mimetype='application/json')
 
 
 if __name__ == '__main__':
