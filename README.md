@@ -1,7 +1,9 @@
 # elastic-archiver
-RESTFUL Python powered ElasticSearch  index archiver
+
+RESTFUL Python powered AWS ElasticSearch Service index archiver
 
 ## Prerqusities
+
 * Create Database using `schema.create.sql`;
 * pip install -U Flask
 * pip install peewee
@@ -11,7 +13,7 @@ RESTFUL Python powered ElasticSearch  index archiver
 
 ## Create ROLE POLICY
 
-step1: create `role-policy.json` file as like below:
+create `role-policy.json` file as like below using file editor:
 
  {
   "Version": "2012-10-17",
@@ -27,7 +29,8 @@ step1: create `role-policy.json` file as like below:
 
 ## Create IAM ROLE
 
-step2: $ aws iam create-role --role-name role --assume-role-policy-document file://role-policy.json
+Execute below command using aws sdk;
+$ aws iam create-role --role-name role --assume-role-policy-document file://role-policy.json
 Here is example response for creating role:
 {
     "Role": {
