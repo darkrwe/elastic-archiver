@@ -6,6 +6,8 @@ from peewee import Model, BigIntegerField, CharField
 from playhouse.shortcuts import model_to_dict
 from response_generator import generateSuccessResponse, generateErrorResponse, HttpStatusCodes
 from util import getCurrentTimeMillis
+import requests
+from server_register import registerServer
 
 app = flask.Flask(__name__)
 # app.config["DEBUG"] = True
@@ -63,7 +65,7 @@ def createESServer():
             return generateErrorResponse(None, "Elastic server is already added", [], HttpStatusCodes['BAD_REQUEST'])
     except Exception:
         return generateErrorResponse(None, "Something went wrong while saving server", [],
-                                HttpStatusCodes['INTERNAL_SERVER_ERROR'])
+                                     HttpStatusCodes['INTERNAL_SERVER_ERROR'])
     return generateSuccessResponse(model_to_dict(server))
 
 
@@ -76,7 +78,16 @@ def registerESServer(server_id):
         if server.is_registered is True:
             return generateErrorResponse(None, "Server is already registered", [], HttpStatusCodes['BAD_REQUEST'])
         else:
-            return generateSuccessResponse(True)
+            result = registerServer(server.host,
+                                    server.region,
+                                    request.json['repository_name'],
+                                    request.json['bucket'],
+                                    request.json['role_arn'])
+            if result is True:
+                return generateSuccessResponse(True)
+            else:
+                return generateErrorResponse(None, "Something went wrong while registering server", [],
+                                             HttpStatusCodes['INTERNAL_SERVER_ERROR'])
 
     except Exception:
         return generateErrorResponse(None, "Something went wrong while registering server", [],
