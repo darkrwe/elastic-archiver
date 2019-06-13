@@ -11,7 +11,7 @@ RESTFUL Python powered AWS ElasticSearch Service index archiver
 * in windows you can use sqlite3.exe ~/util
 
 
-## Create ROLE POLICY
+## Create Role Policy File
 
 create `role-policy.json` file as like below using file editor:
 
@@ -27,11 +27,14 @@ create `role-policy.json` file as like below using file editor:
   }]
  }
 
-## Create IAM ROLE
+## Create Aws Iam Role
 
 Execute below command using aws sdk;
+
 $ aws iam create-role --role-name role --assume-role-policy-document file://role-policy.json
+
 Here is example response for creating role:
+
 {
     "Role": {
         "Path": "/",
@@ -57,12 +60,14 @@ Here is example response for creating role:
 
 ## Create s3 Bucket
 
-step3: create bucket "data" on your s3.
+create bucket "data" on your s3.
 
 ## Attach Inline Policy to your role
 
-step4:  Attach inline below policy to the role "role"
+Attach inline below policy to the role "role"
+
 inline policy name: `inline-policy`
+
    {
     "Version": "2012-10-17",
     "Statement": [
