@@ -1,6 +1,6 @@
 # elastic-archiver
 
-RESTFUL Python powered AWS ElasticSearch Service index archiver
+RESTFUL Python Flask powered AWS ElasticSearch Service index archiver
 
 ## Prerqusities
 
