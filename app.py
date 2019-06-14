@@ -7,7 +7,7 @@ from playhouse.shortcuts import model_to_dict
 from response_generator import generateSuccessResponse, generateErrorResponse, HttpStatusCodes
 from util import getCurrentTimeMillis
 import requests
-from server_register import registerServer
+from es_service import registerServer, getSnapshotRepositories
 
 app = flask.Flask(__name__)
 # app.config["DEBUG"] = True
@@ -82,15 +82,41 @@ def registerESServer(server_id):
                                     server.region,
                                     request.json['repository_name'],
                                     request.json['bucket'],
-                                    request.json['role_arn'])
-            if result is True:
-                return generateSuccessResponse(True)
-            else:
+                                    request.json['role_name'],
+                                    request.json['account_id'], )
+            if result is None:
                 return generateErrorResponse(None, "Something went wrong while registering server", [],
                                              HttpStatusCodes['INTERNAL_SERVER_ERROR'])
+            else:
+                server.is_registered = True
+                server.save()
+                return generateSuccessResponse(result)
 
     except Exception:
         return generateErrorResponse(None, "Something went wrong while registering server", [],
+                                     HttpStatusCodes['INTERNAL_SERVER_ERROR'])
+
+    return generateSuccessResponse(True)
+
+
+# Get snapshot repositories
+@app.route('/api/v1/elastic-server/snapshot-repository/<server_id>', methods=['GET'])
+def getSSRepositories(server_id):
+    try:
+        server = ElasticServer.get(ElasticServer.id == server_id)
+
+        if server.is_registered is False:
+            return generateErrorResponse(None, "Server is not registered", [], HttpStatusCodes['BAD_REQUEST'])
+        else:
+            result = getSnapshotRepositories(server.host)
+            if result is None:
+                return generateErrorResponse(None, "Something went wrong while getting snapshot repositories", [],
+                                             HttpStatusCodes['INTERNAL_SERVER_ERROR'])
+            else:
+                return generateSuccessResponse(result)
+
+    except Exception:
+        return generateErrorResponse(None, "Something went wrong while getting snapshot repositories", [],
                                      HttpStatusCodes['INTERNAL_SERVER_ERROR'])
 
     return generateSuccessResponse(True)
